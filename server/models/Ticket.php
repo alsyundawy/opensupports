@@ -1,7 +1,7 @@
 <?php
 /**
  * @api {OBJECT} Ticket Ticket
- * @apiVersion 4.5.0
+ * @apiVersion 4.6.1
  * @apiGroup Data Structures
  * @apiParam {Number}  ticketNumber The number of the ticket.
  * @apiParam {String}  title The title of the ticket.
@@ -51,8 +51,17 @@ class Ticket extends DataStore {
             'authorEmail',
             'authorName',
             'sharedTagList',
-            'editedContent'
+            'editedContent',
+            'editedTitle'
         );
+    }
+
+    public static function getFetchAs() {
+        return [
+            'author' => 'user',
+            'authorStaff' => 'staff',
+            'owner' => 'staff',
+        ];
     }
 
     public static function getTicket($value, $property = 'id') {
@@ -132,7 +141,8 @@ class Ticket extends DataStore {
             'owner' => $this->ownerToArray(),
             'events' => $minimized ? [] : $this->eventsToArray(),
             'tags' => $this->sharedTagList->toArray(true),
-            'edited' => $this->editedContent
+            'edited' => $this->editedContent,
+            'editedTitle' => $this->editedTitle
         ];
     }
 

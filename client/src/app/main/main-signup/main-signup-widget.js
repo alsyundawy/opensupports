@@ -1,10 +1,10 @@
 import React              from 'react';
-import ReactDOM           from 'react-dom';
 import _                  from 'lodash';
 import classNames         from 'classnames';
 
 import i18n               from 'lib-app/i18n';
 import API                from 'lib-app/api-call';
+import history            from 'lib-app/history';
 
 import Captcha            from 'app/main/captcha';
 import SubmitButton       from 'core-components/submit-button';
@@ -17,7 +17,6 @@ import Header             from 'core-components/header';
 class MainSignUpWidget extends React.Component {
 
     static propTypes = {
-        onSuccess: React.PropTypes.func,
         className: React.PropTypes.string
     };
 
@@ -27,7 +26,7 @@ class MainSignUpWidget extends React.Component {
         this.state = {
             loading: false,
             email: null,
-            customFields: []
+            customFields: null
         };
     }
 
@@ -40,6 +39,7 @@ class MainSignUpWidget extends React.Component {
     }
 
     render() {
+        if(!this.state.customFields) return null;
         return (
             <Widget className={this.getClass()}>
                 <Header title={i18n('SIGN_UP')} description={i18n('SIGN_UP_VIEW_DESCRIPTION')} />
@@ -153,6 +153,8 @@ class MainSignUpWidget extends React.Component {
         this.setState({
             loading: false,
             message: 'success'
+        }, () => {
+            setTimeout(() => {history.push('/check-ticket')}, 2000);
         });
     }
 

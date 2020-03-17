@@ -5,7 +5,7 @@ DataValidator::with('CustomValidations', true);
 
 /**
  * @api {post} /user/signup Sign up
- * @apiVersion 4.5.0
+ * @apiVersion 4.6.1
  *
  * @apiName Sign up
  *
@@ -18,7 +18,7 @@ DataValidator::with('CustomValidations', true);
  * @apiParam {String} name The name of the new user.
  * @apiParam {String} email The email of the new user.
  * @apiParam {String} password The password of the new user.
- * @apiParam {String} apiKey APIKey to sign up an user if the user system is disabled.
+ * @apiParam {String} apiKey APIKey to sign up an user if the registration system is disabled.
  * @apiParam {String} customfield_ Custom field values for this user.
  *
  * @apiUse INVALID_NAME
@@ -56,7 +56,7 @@ class SignUpController extends Controller {
             'permission' => 'any',
             'requestData' => [
                 'name' => [
-                    'validation' => DataValidator::length(2, 55),
+                    'validation' => DataValidator::notBlank()->length(2, 55),
                     'error' => ERRORS::INVALID_NAME
                 ],
                 'email' => [
@@ -64,7 +64,7 @@ class SignUpController extends Controller {
                     'error' => ERRORS::INVALID_EMAIL
                 ],
                 'password' => [
-                    'validation' => DataValidator::length(5, 200),
+                    'validation' => DataValidator::notBlank()->length(5, 200),
                     'error' => ERRORS::INVALID_PASSWORD
                 ]
             ]
@@ -72,7 +72,7 @@ class SignUpController extends Controller {
 
         if(!$this->csvImported) {
             $validations['requestData']['captcha'] = [
-                'validation' => DataValidator::captcha(),
+                'validation' => DataValidator::captcha(APIKey::REGISTRATION),
                 'error' => ERRORS::INVALID_CAPTCHA
             ];
         }
@@ -101,6 +101,10 @@ class SignUpController extends Controller {
 
         if (!Setting::getSetting('registration')->value && $apiKey->isNull() && !Controller::isStaffLogged(2) && !$this->csvImported) {
             throw new RequestException(ERRORS::NO_PERMISSION);
+        }
+
+        if(!$apiKey->isNull() && $apiKey->type !== APIKey::REGISTRATION) {
+            throw new RequestException(ERRORS::INVALID_API_KEY_TYPE);
         }
 
         $userId = $this->createNewUserAndRetrieveId();

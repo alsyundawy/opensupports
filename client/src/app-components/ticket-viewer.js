@@ -8,6 +8,7 @@ import i18n  from 'lib-app/i18n';
 import API   from 'lib-app/api-call';
 import SessionStore       from 'lib-app/session-store';
 import MentionsParser     from 'lib-app/mentions-parser';
+import history from 'lib-app/history';
 
 import TicketEvent        from 'app-components/ticket-event';
 import AreYouSure         from 'app-components/are-you-sure';
@@ -58,7 +59,11 @@ class TicketViewer extends React.Component {
         commentEdited: false,
         commentPrivate: false,
         edit: false,
-        editId: 0
+        editId: 0,
+        tagSelectorLoading: false,
+        editTitle: false,
+        newTitle: this.props.ticket.title,
+        editTitleError: false,
     };
 
     componentDidMount() {
@@ -71,13 +76,7 @@ class TicketViewer extends React.Component {
         const ticket = this.props.ticket;
         return (
             <div className="ticket-viewer">
-                <div className="ticket-viewer__header row">
-                    <span className="ticket-viewer__number">#{ticket.ticketNumber}</span>
-                    <span className="ticket-viewer__title">{ticket.title}</span>
-                    <span className="ticket-viewer__flag">
-                        <Icon name={(ticket.language === 'en') ? 'us' : ticket.language}/>
-                    </span>
-                </div>
+                {this.state.editTitle ? this.renderEditableTitle() : this.renderTitleHeader()}
                 {this.props.editable ? this.renderEditableHeaders() : this.renderHeaders()}
                 <div className="ticket-viewer__content">
                     <TicketEvent
@@ -102,6 +101,50 @@ class TicketViewer extends React.Component {
                 {(!this.props.ticket.closed && (this.props.editable || !this.props.assignmentAllowed)) ? this.renderResponseField() : (this.showDeleteButton())? <Button size="medium" onClick={this.onDeleteTicketClick.bind(this)}>{i18n('DELETE_TICKET')}</Button> : null}
             </div>
         );
+    }
+
+    renderTitleHeader() {
+        const {ticket, userStaff, userId} = this.props;
+        const {ticketNumber, title, author, editedTitle, language} = ticket;
+
+        return(
+            <div className="ticket-viewer__header row">
+                <span className="ticket-viewer__number">#{ticketNumber}</span>
+                <span className="ticket-viewer__title">{title}</span>
+                <span className="ticket-viewer__flag">
+                    <Icon name={(language === 'en') ? 'us' : language}/>
+                </span>
+                {((author.id == userId && author.staff == userStaff) || userStaff) ? this.renderEditTitleOption() : null}
+                {editedTitle ? this.renderEditedTitleText() : null }
+            </div>
+        )
+    }
+
+    renderEditedTitleText(){
+        return(
+            <div className="ticket-viewer__edited-title-text"> {i18n('TITLE_EDITED')} </div>
+        )
+    }
+    
+    renderEditTitleOption() {
+        return(
+            <span className="ticket-viewer__edit-title-icon">
+                <Icon name="pencil" onClick={() => this.setState({editTitle: true})} />
+            </span>
+        )
+    }
+
+    renderEditableTitle(){
+        return(
+            <div className="ticket-viewer__header row">
+                <div className="ticket-viewer__edit-title-box">
+                    <FormField className="ticket-viewer___input-edit-title" error={this.state.editTitleError}  value={this.state.newTitle} field='input' onChange={(e) => this.setState({newTitle: e.target.value })} />
+                </div>
+                <Button type='secondary' size="extra-small" onClick={this.changeTitle.bind(this)}>
+                    {i18n('EDIT_TITLE')}
+                </Button>
+            </div>
+        )
     }
 
     renderEditableHeaders() {
@@ -134,7 +177,14 @@ class TicketViewer extends React.Component {
                                   onChange={this.onDepartmentDropdownChanged.bind(this)} />
                     </div>
                     <div className="col-md-4">{ticket.author.name}</div>
-                    <div className="col-md-4"> <TagSelector items={this.props.tags} values={this.props.ticket.tags} onRemoveClick={this.removeTag.bind(this)} onTagSelected={this.addTag.bind(this)}/></div>
+                    <div className="col-md-4">
+                        <TagSelector
+                            items={this.props.tags}
+                            values={this.props.ticket.tags}
+                            onRemoveClick={this.removeTag.bind(this)}
+                            onTagSelected={this.addTag.bind(this)}
+                            loading={this.state.tagSelectorLoading}/>
+                    </div>
                 </div>
                 <div className="ticket-viewer__info-row-header row">
                     <div className="col-md-4">{i18n('PRIORITY')}</div>
@@ -143,7 +193,11 @@ class TicketViewer extends React.Component {
                 </div>
                 <div className="ticket-viewer__info-row-values row">
                     <div className="col-md-4">
-                        <DropDown className="ticket-viewer__editable-dropdown" items={priorityList} selectedIndex={priorities[ticket.priority]} onChange={this.onPriorityDropdownChanged.bind(this)} />
+                        <DropDown
+                            className="ticket-viewer__editable-dropdown"
+                            items={priorityList}
+                            selectedIndex={priorities[ticket.priority]}
+                            onChange={this.onPriorityDropdownChanged.bind(this)} />
                     </div>
                     <div className="col-md-4">
                         {this.renderAssignStaffList()}
@@ -391,6 +445,26 @@ class TicketViewer extends React.Component {
         AreYouSure.openModal(null, this.deleteTicket.bind(this));
     }
 
+    changeTitle(){
+        API.call({
+            path: '/ticket/edit-title',
+            data: {
+                ticketNumber: this.props.ticket.ticketNumber,
+                title: this.state.newTitle
+            }
+        }).then(() => {
+            this.setState({
+                editTitle: false,
+                editTitleError: false
+            });
+            this.onTicketModification();
+        }).catch((result) => {
+            this.setState({
+                editTitleError: i18n(result.message)
+            })
+        });
+    }
+
     reopenTicket() {
         API.call({
             path: '/ticket/re-open',
@@ -415,7 +489,10 @@ class TicketViewer extends React.Component {
             data: {
                 ticketNumber: this.props.ticket.ticketNumber
             }
-        }).then(this.onTicketModification.bind(this));
+        }).then((result) => {
+             this.onTicketModification(result);
+             history.push('/admin/panel/tickets/my-tickets/');
+        });
     }
 
     changeDepartment(index) {
@@ -445,23 +522,47 @@ class TicketViewer extends React.Component {
     }
 
     addTag(tag) {
+        this.setState({
+            tagSelectorLoading: true,
+        })
         API.call({
             path: '/ticket/add-tag',
             data: {
                 ticketNumber: this.props.ticket.ticketNumber,
                 tagId: tag
             }
-        }).then(this.onTicketModification.bind(this))
+        })
+        .then(() => {
+            this.setState({
+                tagSelectorLoading: false,
+            });
+            this.onTicketModification();
+        })
+        .catch(() => this.setState({
+            tagSelectorLoading: false,
+        }))
     }
 
     removeTag(tag) {
+        this.setState({
+            tagSelectorLoading: true,
+        });
+
         API.call({
             path: '/ticket/remove-tag',
             data: {
                 ticketNumber: this.props.ticket.ticketNumber,
                 tagId: tag
             }
-        }).then(this.onTicketModification.bind(this))
+        }).then(() => {
+            this.setState({
+                tagSelectorLoading: false,
+            });
+
+            this.onTicketModification();
+        }).catch(() => this.setState({
+            tagSelectorLoading: false,
+        }))
     }
 
     onCustomResponsesChanged({index}) {
@@ -570,14 +671,14 @@ class TicketViewer extends React.Component {
             {content: 'None', id: 0}
         ];
 
-        if(_.any(userDepartments, {id: ticketDepartmentId})) {
+        if(_.some(userDepartments, {id: ticketDepartmentId})) {
             staffAssignmentItems.push({content: i18n('ASSIGN_TO_ME'), id: userId});
         }
 
         staffAssignmentItems = staffAssignmentItems.concat(
             _.map(
                 _.filter(staffMembers, ({id, departments}) => {
-                    return (id != userId) && _.any(departments, {id: ticketDepartmentId});
+                    return (id != userId) && _.some(departments, {id: ticketDepartmentId});
                 }),
                 ({id, name}) => ({content: name, id})
             )
@@ -604,7 +705,6 @@ class TicketViewer extends React.Component {
 }
 
 export default connect((store) => {
-
     return {
         userId: store.session.userId,
         userStaff: store.session.staff,

@@ -40,6 +40,10 @@
  * @apiError {String} INVALID_NAME The name is invalid, probably too short.
  */
 /**
+ * @apiDefine INVALID_DESCRIPTION
+ * @apiError {String} INVALID_DESCRIPTION The description is invalid.
+ */
+/**
  * @apiDefine INVALID_SETTING
  * @apiError {String} INVALID_SETTING The setting are invalid.
  */
@@ -90,6 +94,54 @@
 /**
  * @apiDefine INVALID_QUERY
  * @apiError {String} INVALID_QUERY The query is invalid.
+ */
+/**
+ * @apiDefine INVALID_BLACK_LIST
+ * @apiError {String} INVALID_BLACK_LIST The black list is invalid.
+ */
+/**
+ * @apiDefine INVALID_TAG_FILTER
+ * @apiError {String} INVALID_TAG_FILTER The tag filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_CLOSED_FILTER
+ * @apiError {String} INVALID_CLOSED_FILTER The closed filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_UNREAD_STAFF_FILTER
+ * @apiError {String} INVALID_UNREAD_STAFF_FILTER The unread-staff filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_PRIORITY_FILTER
+ * @apiError {String} INVALID_PRIORITY_FILTER The priority filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_DATE_RANGE_FILTER
+ * @apiError {String} INVALID_DATE_RANGE_FILTER The date-range filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_DEPARTMENT_FILTER
+ * @apiError {String} INVALID_DEPARTMENT_FILTER The department filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_AUTHOR_FILTER
+ * @apiError {String} INVALID_AUTHOR_FILTER The author filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_OWNER_FILTER
+ * @apiError {String} INVALID_OWNER_FILTER The owner filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_ASSIGNED_FILTER
+ * @apiError {String} INVALID_ASSIGNED_FILTER The assigned filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_QUERY_FILTER
+ * @apiError {String} INVALID_QUERY_FILTER The query filter is invalid.
+ */
+/**
+ * @apiDefine INVALID_ORDER_BY
+ * @apiError {String} INVALID_ORDER_BY The order-by is invalid.
  */
 /**
  * @apiDefine INVALID_TOPIC
@@ -251,6 +303,10 @@
  * @apiDefine INVALID_COLOR
  * @apiError {String} INVALID_COLOR The color should be in hexadecimal, preceded by a '#'
  */
+/**
+ * @apiDefine INVALID_API_KEY_TYPE
+ * @apiError {String} INVALID_API_KEY_TYPE Api key type is not one of the availables
+ */
 
 class ERRORS {
     const INVALID_CREDENTIALS = 'INVALID_CREDENTIALS';
@@ -263,6 +319,7 @@ class ERRORS {
     const INVALID_EMAIL = 'INVALID_EMAIL';
     const INVALID_PASSWORD = 'INVALID_PASSWORD';
     const INVALID_NAME = 'INVALID_NAME';
+    const INVALID_DESCRIPTION = 'INVALID_DESCRIPTION';
     const INVALID_SETTING = 'INVALID_SETTING';
     const INVALID_DEPARTMENT = 'INVALID_DEPARTMENT';
     const INVALID_TICKET = 'INVALID_TICKET';
@@ -277,6 +334,18 @@ class ERRORS {
     const INVALID_PRIORITY = 'INVALID_PRIORITY';
     const INVALID_PAGE = 'INVALID_PAGE';
     const INVALID_QUERY = 'INVALID_QUERY';
+    const INVALID_BLACK_LIST = 'INVALID_BLACK_LIST';
+    const INVALID_TAG_FILTER = 'INVALID_TAG_FILTER';
+    const INVALID_CLOSED_FILTER = 'INVALID_CLOSED_FILTER';
+    const INVALID_UNREAD_STAFF_FILTER = 'INVALID_UNREAD_STAFF_FILTER';
+    const INVALID_PRIORITY_FILTER = 'INVALID_PRIORITY_FILTER';
+    const INVALID_DATE_RANGE_FILTER = 'INVALID_DATE_RANGE_FILTER';
+    const INVALID_DEPARTMENT_FILTER = 'INVALID_DEPARTMENT_FILTER';
+    const INVALID_AUTHOR_FILTER = 'INVALID_AUTHOR_FILTER';
+    const INVALID_OWNER_FILTER = 'INVALID_OWNER_FILTER';
+    const INVALID_ASSIGNED_FILTER = 'INVALID_ASSIGNED_FILTER';
+    const INVALID_QUERY_FILTER = 'INVALID_QUERY_FILTER';
+    const INVALID_ORDER_BY = 'INVALID_ORDER_BY';
     const INVALID_TOPIC = 'INVALID_TOPIC';
     const INVALID_SEARCH = 'INVALID_SEARCH';
     const INVALID_ORDER = 'INVALID_ORDER';
@@ -317,4 +386,5 @@ class ERRORS {
     const INVALID_CUSTOM_FIELD_OPTION = 'INVALID_CUSTOM_FIELD_OPTION';
     const UNAVAILABLE_STATS = 'UNAVAILABLE_STATS';
     const INVALID_COLOR = 'INVALID_COLOR';
+    const INVALID_API_KEY_TYPE = 'INVALID_API_KEY_TYPE';
 }
