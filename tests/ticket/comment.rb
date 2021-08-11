@@ -2,9 +2,9 @@ describe '/ticket/comment/' do
     Scripts.createUser('commenter@os4.com', 'commenter', 'Commenter')
     Scripts.login('commenter@os4.com', 'commenter')
 
-    result = Scripts.createTicket
-
-    @ticketNumber = result['ticketNumber']
+    Scripts.createTicket('Winter came and it was a disappointment','The fandom remembers')
+    ticket = $database.getRow('ticket', 'Winter came and it was a disappointment' , 'title')
+    @ticketNumber = ticket['ticket_number']
 
     it 'should fail if invalid token is passed' do
         result = request('/ticket/comment', {
@@ -44,8 +44,8 @@ describe '/ticket/comment/' do
         comment = $database.getRow('ticketevent', ticket['id'], 'ticket_id')
         (comment['content']).should.equal('some comment content')
         (comment['type']).should.equal('COMMENT')
-        (comment['author_user_id']).should.equal($csrf_userid)
-        (ticket['unread_staff']).should.equal('1')
+        (comment['author_user_id']).should.equal($csrf_userid.to_i)
+        (ticket['unread_staff']).should.equal(1)
 
         lastLog = $database.getLastRow('log')
         (lastLog['type']).should.equal('COMMENT')
@@ -67,8 +67,8 @@ describe '/ticket/comment/' do
         comment = $database.getRow('ticketevent', ticket['id'], 'ticket_id')
         (comment['content']).should.equal('some comment content')
         (comment['type']).should.equal('COMMENT')
-        (comment['author_staff_id']).should.equal($csrf_userid)
-        (ticket['unread_staff']).should.equal('1')
+        (comment['author_staff_id']).should.equal($csrf_userid.to_i)
+        (ticket['unread_staff']).should.equal(1)
 
         lastLog = $database.getLastRow('log')
         (lastLog['type']).should.equal('COMMENT')
@@ -100,7 +100,7 @@ describe '/ticket/comment/' do
         comment = $database.getRow('ticketevent', ticket['id'], 'ticket_id')
         (comment['content']).should.equal('some comment content jeje')
         (comment['type']).should.equal('COMMENT')
-        (comment['author_staff_id']).should.equal($csrf_userid)
+        (comment['author_staff_id']).should.equal($csrf_userid.to_i)
 
         lastLog = $database.getLastRow('log')
         (lastLog['type']).should.equal('COMMENT')
@@ -201,7 +201,7 @@ describe '/ticket/comment/' do
 
         (result['status']).should.equal('success')
         comment = $database.getRow('ticketevent', 'this is not a private comment', 'content')
-        (comment['private']).should.equal("0")
+        (comment['private']).should.equal(0)
         request('/user/logout')
 
     end
@@ -227,6 +227,6 @@ describe '/ticket/comment/' do
 
         (result['status']).should.equal('success')
         comment = $database.getRow('ticketevent', 'this is a private comment', 'content')
-        (comment['private']).should.equal("1")
+        (comment['private']).should.equal(1)
     end
 end

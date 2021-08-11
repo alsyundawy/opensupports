@@ -3,7 +3,7 @@ use Respect\Validation\Validator as DataValidator;
 
 /**
  * @api {post} /staff/edit Edit staff
- * @apiVersion 4.6.1
+ * @apiVersion 4.9.0
  *
  * @apiName Edit staff
  *
@@ -64,11 +64,9 @@ class EditStaffController extends Controller {
 
             if($this->staffInstance->isNull()) {
                 throw new RequestException(ERRORS::INVALID_STAFF);
-                return;
             }
         } else {
             throw new RequestException(ERRORS::NO_PERMISSION);
-            return;
         }
 
         if(Controller::request('departments')) {

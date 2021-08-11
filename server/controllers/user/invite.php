@@ -5,7 +5,7 @@ DataValidator::with('CustomValidations', true);
 
 /**
  * @api {post} /user/invite Invite
- * @apiVersion 4.6.1
+ * @apiVersion 4.9.0
  *
  * @apiName Invite
  *
@@ -64,9 +64,6 @@ class InviteUserController extends Controller {
     }
 
     public function handler() {
-        if (!Controller::isUserSystemEnabled()) {
-            throw new RequestException(ERRORS::USER_SYSTEM_DISABLED);
-        }
 
         $this->storeRequestData();
 
