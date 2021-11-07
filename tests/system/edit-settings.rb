@@ -1,5 +1,5 @@
 describe'system/edit-settings' do
-    request('/user/logout')
+    Scripts.logout()
     Scripts.login($staff[:email], $staff[:password], true)
 
     it 'should edit settings' do
@@ -33,10 +33,10 @@ describe'system/edit-settings' do
         (row['value']).should.equal('testemail@hotmail.com')
         row = $database.getRow('setting', 'default-is-locked', 'name')
         (row['value']).should.equal('1')
-        request('/user/logout')
+        Scripts.logout()
     end
     it 'should fail if supported languages are invalid' do
-        request('/user/logout')
+        Scripts.logout()
         Scripts.login($staff[:email], $staff[:password], true)
 
         result= request('/system/edit-settings', {
@@ -50,7 +50,7 @@ describe'system/edit-settings' do
         (result['message']).should.equal('INVALID_SUPPORTED_LANGUAGES')
     end
     it 'should change allowed and supported languages' do
-        request('/user/logout')
+        Scripts.logout()
         Scripts.login($staff[:email], $staff[:password], true)
 
         result= request('/system/edit-settings', {
@@ -94,6 +94,22 @@ describe'system/edit-settings' do
 
 
         Scripts.updateLockedDepartmentSetting(0);
-        request('/user/logout')
+        Scripts.logout()
     end
+
+    it 'should delete ticket when user table is not created' do
+        Scripts.logout()
+        Scripts.login($staff[:email], $staff[:password], true)
+
+        Scripts.createTicket('TicketToDeleteWithoutUsersCreated')
+        ticket = $database.getRow('ticket', 'TicketToDeleteWithoutUsersCreated', 'title');
+
+        result = request('/ticket/delete', {
+            ticketNumber: ticket['ticket_number'],
+            csrf_userid: $csrf_userid,
+            csrf_token: $csrf_token
+        })
+        (result['status']).should.equal('success')
+    end
+
 end

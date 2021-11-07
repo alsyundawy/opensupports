@@ -16,6 +16,22 @@ class Scripts
         })
     end
 
+    def self.inviteUser(email, name='genericName')
+        response = request('/user/invite', {
+            :name => name,
+            :email => email,
+        })
+    end
+
+    def self.inviteStaff(email, name='validName', level=1, profilePic='', departments: '[1]')
+        response = request('/staff/invite', {
+            :name => name,
+            :email => email,
+            :level => level,
+            :departments => departments.to_string
+        })
+    end
+    
     def self.createStaff(email, password, name, level='1') # WARNING: NOT USED ANYWHERE
         departments = request('/system/get-settings', {
           csrf_userid: $csrf_userid,
@@ -56,7 +72,6 @@ class Scripts
     end
 
     def self.login(email = 'steve@jobs.com', password = 'custompassword', staff = false)
-        request('/user/logout')
         response = request('/user/login', {
             :email => email,
             :password => password,
@@ -72,7 +87,10 @@ class Scripts
     end
 
     def self.logout()
-      request('/user/logout')
+        request('/user/logout', {
+            csrf_userid: $csrf_userid,
+            csrf_token: $csrf_token
+        })
     end
 
     def self.createTicket(title = 'Winter is coming',content = 'The north remembers', department = 1)
