@@ -8,6 +8,7 @@ import i18n from 'lib-app/i18n';
 import API from 'lib-app/api-call';
 import history from 'lib-app/history';
 import searchTicketsUtils from 'lib-app/search-tickets-utils';
+import ticketUtils from 'lib-app/ticket-utils';
 
 import Form from 'core-components/form';
 import SubmitButton from 'core-components/submit-button';
@@ -34,7 +35,8 @@ class TicketQueryFilters extends React.Component {
             formState,
             filters,
             showFilters,
-            ticketQueryListState
+            ticketQueryListState,
+            staffList
         } = this.props;
 
         return (
@@ -72,7 +74,7 @@ class TicketQueryFilters extends React.Component {
                             label={i18n('OWNER')}
                             name="owners"
                             field="autocomplete"
-                            fieldProps={{items: this.getStaffList()}} />
+                            fieldProps={{items: ticketUtils.getStaffList({staffList}, 'toAutocomplete')}} />
                     </div>
                     <div className="ticket-query-filters__third-row">
                         <FormField
@@ -131,8 +133,8 @@ class TicketQueryFilters extends React.Component {
                     id: author.id*1,
                     profilePic: author.profilePic,
                     isStaff: author.isStaff * 1,
-                    content: author.profilePic !== undefined ? this.renderStaffOption(author) : author.name,
-                    contentOnSelected: author.profilePic !== undefined ? this.renderStaffSelected(author) : author.name
+                    content: author.profilePic !== undefined ? ticketUtils.renderStaffOption(author) : author.name,
+                    contentOnSelected: author.profilePic !== undefined ? ticketUtils.renderStaffSelected(author) : author.name
                 }});
         });
     }
@@ -159,29 +161,9 @@ class TicketQueryFilters extends React.Component {
         );
     }
 
-    renderStaffOption(staff) {
-        return (
-            <div className="ticket-query-filters__staff-option" key={`staff-option-${staff.id}`}>
-                <img className="ticket-query-filters__staff-option__profile-pic" src={this.getStaffProfilePic(staff)}/>
-                <span className="ticket-query-filters__staff-option__name">{staff.name}</span>
-            </div>
-        );
-    }
-
-    renderStaffSelected(staff) {
-        return (
-            <div className="ticket-query-filters__staff-selected" key={`staff-selected-${staff.id}`}>
-                <img className="ticket-query-filters__staff-selected__profile-pic" src={this.getStaffProfilePic(staff)}/>
-                <span className="ticket-query-filters__staff-selected__name">{staff.name}</span>
-            </div>
-        );
-    }
-
     addTag(tag) {
         const { formState } = this.props;
-        let selectedTagsId = formState.tags.concat(this.tagsNametoTagsId(this.getSelectedTagsName([tag])));
-
-        this.onChangeFormState({...formState, tags: selectedTagsId});
+        this.onChangeFormState({...formState, tags: [...formState.tags, tag]});
     }
 
     autorsComparer(autorList, autorSelectedList) {
@@ -212,18 +194,23 @@ class TicketQueryFilters extends React.Component {
         let selectedDepartments = [];
 
         if(selectedDepartmentsId !== undefined) {
-            let departments = this.getDepartmentsItems();
-            selectedDepartments = departments.filter(item => _.includes(selectedDepartmentsId, item.id));
+            selectedDepartments = selectedDepartmentsId.map(
+                (departmentId) => this.getDepartmentsItems().find(_department => (_department.id === departmentId))
+            );
+
         }
 
         return selectedDepartments;
     }
 
     getSelectedStaffs(selectedStaffsId) {
+        const { staffList } = this.props;
         let selectedStaffs = [];
+
         if(selectedStaffsId !== undefined) {
-            let staffs = this.getStaffList();
-            selectedStaffs = staffs.filter(staff => _.includes(selectedStaffsId, staff.id));
+            selectedStaffs = selectedStaffsId.map(
+                (staffId) => ticketUtils.getStaffList({staffList}, 'toAutocomplete').find(_staff => (_staff.id === staffId))
+            );
         }
 
         return selectedStaffs;
@@ -233,31 +220,12 @@ class TicketQueryFilters extends React.Component {
         let selectedTagsName = [];
 
         if(selectedTagsId !== undefined) {
-            let tagList = this.getTags();
-            let selectedTags = tagList.filter(item => _.includes(selectedTagsId, item.id));
-            selectedTagsName = selectedTags.map(tag => tag.name);
+            selectedTagsName = selectedTagsId.map(
+                (tagId) => (this.getTags().find(_tag => (_tag.id === tagId)) || {}).name
+            );
         }
 
         return selectedTagsName;
-    }
-
-    getStaffList() {
-        const { staffList, } = this.props;
-        let newStaffList = staffList.map(staff => {
-            return {
-                id: JSON.parse(staff.id),
-                name: staff.name.toLowerCase(),
-                color: 'gray',
-                contentOnSelected: this.renderStaffSelected(staff),
-                content: this.renderStaffOption(staff),
-            }
-        });
-
-        return newStaffList;
-    }
-
-    getStaffProfilePic(staff) {
-        return staff.profilePic ? API.getFileLink(staff.profilePic) : (API.getURL() + '/images/profile.png');
     }
 
     getStatusItems() {
@@ -312,17 +280,18 @@ class TicketQueryFilters extends React.Component {
 
     removeTag(tag) {
         const { formState } = this.props;
-        let tagListName = formState.tags;
-        let newTagList = tagListName.filter(item => item !== tag);
-        let selectedTags = this.tagsNametoTagsId(this.getSelectedTagsName(newTagList));
 
-        this.onChangeFormState({...formState, tags: selectedTags});
+        this.onChangeFormState({...formState, tags: formState.tags.filter(item => item !== tag)});
     }
 
     tagsNametoTagsId(selectedTagsName) {
-        let tagList = this.getTags();
-        let selectedTags = tagList.filter(item => _.includes(selectedTagsName, item.name));
-        let selectedTagsId = selectedTags.map(tag => tag.id);
+        let selectedTagsId = [];
+
+        if (selectedTagsName != undefined) {
+            selectedTagsId = selectedTagsName.map(
+                (tagName) => (this.getTags().find(_tag => (_tag.name === tagName)) || {}).id
+            );
+        }
 
         return selectedTagsId;
     }
@@ -366,8 +335,8 @@ class TicketQueryFilters extends React.Component {
             id: author.id*1,
             isStaff: author.isStaff*1,
             profilePic: author.profilePic,
-            content: author.profilePic !== undefined ? this.renderStaffOption(author) : author.name,
-            contentOnSelected: author.profilePic !== undefined ? this.renderStaffSelected(author) : author.name
+            content: author.profilePic !== undefined ? ticketUtils.renderStaffOption(author) : author.name,
+            contentOnSelected: author.profilePic !== undefined ? ticketUtils.renderStaffSelected(author) : author.name
         }));
     }
 
